@@ -1,0 +1,13 @@
+{
+  "type": "crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "cavallmod:xylo_log"
+    }
+  ],
+  "result": {
+    "item": "cavallmod:xylo_planks",
+    "count": 4
+  }
+}
