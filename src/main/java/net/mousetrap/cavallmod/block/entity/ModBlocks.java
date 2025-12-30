@@ -20,6 +20,8 @@ import java.util.function.Supplier;
 public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS =
             DeferredRegister.create(ForgeRegistries.BLOCKS, CavallMod.MOD_ID);
+    // you register all blocks here
+
 
     public static final RegistryObject<Block> CAVALL_DIRT = registerBlock("cavall_dirt",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.DIRT)));

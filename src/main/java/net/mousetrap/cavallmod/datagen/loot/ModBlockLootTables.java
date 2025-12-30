@@ -25,10 +25,13 @@ public class ModBlockLootTables extends BlockLootSubProvider {
     @Override
     protected void generate() {
         this.dropSelf(ModBlocks.CAVALL_DIRT.get());
+        this.dropSelf(ModBlocks.XYLO_PLANKS.get());
         this.dropSelf(ModBlocks.XYLO_LOG.get());
         this.dropSelf(ModBlocks.XYLO_WOOD.get());
         this.dropSelf(ModBlocks.STRIPPED_XYLO_LOG.get());
         this.dropSelf(ModBlocks.STRIPPED_XYLO_WOOD.get());
+
+        this.dropSelf(ModBlocks.XYLO_LEAVES.get());
 
         // example of dropsOneToFive method
         // this.add(ModBlocks.BLOCK_NAME.get()), block -> dropsOneToFive(ModBlocks.BLOCK_NAME.get(), ModItems.ITEM_NAME.get()));

@@ -16,11 +16,13 @@ public class ModCreativeModeTabs {
 
     public static final RegistryObject<CreativeModeTab> CAVALL_TAB = CREATIVE_MODE_TABS.register("cavall_tab",
             () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.HAPLO_EYE.get()))
-                    .title(Component.translatable("creativetab.tutorial_tab"))
+                    .title(Component.translatable("creativetab.cavall_tab"))
                     .displayItems((itemDisplayParameters, pOutput) -> {
                         // items in the tab
                         pOutput.accept(ModItems.HAPLO_EYE.get());
                         pOutput.accept(ModItems.HAPLO_CLAW.get());
+                        pOutput.accept(ModItems.FOGFOX_SPAWN_EGG.get());
+
                         pOutput.accept(ModBlocks.CAVALL_DIRT.get());
 
                         pOutput.accept(ModBlocks.XYLO_LOG.get());

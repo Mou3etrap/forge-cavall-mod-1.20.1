@@ -1,6 +1,7 @@
 {
   "item.cavallmod.haplo_eye": "Haplo Eye",
   "item.cavallmod.haplo_claw": "Haplo Claw",
+  "item.cavallmod.fogfox_spawn_egg": "Fog Fox Spawn Egg",
 
   "block.cavallmod.cavall_dirt": "Cavall Dirt",
   "block.cavallmod.xylo_log": "Xyloform Log",
@@ -11,7 +12,6 @@
   "block.cavallmod.xylo_leaves": "Xyloform Leaves",
 
   "creativetab.cavall_tab": "Cavall"
-
 
 
 }

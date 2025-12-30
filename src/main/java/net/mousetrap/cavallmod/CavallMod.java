@@ -1,6 +1,7 @@
 package net.mousetrap.cavallmod;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -12,6 +13,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.mousetrap.cavallmod.block.entity.ModBlocks;
+import net.mousetrap.cavallmod.entity.ModEntities;
+import net.mousetrap.cavallmod.entity.client.FogFoxRenderer;
 import net.mousetrap.cavallmod.item.ModCreativeModeTabs;
 import net.mousetrap.cavallmod.item.ModItems;
 import org.slf4j.Logger;
@@ -31,6 +34,7 @@ public class CavallMod
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModEntities.register(modEventBus);
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
@@ -68,8 +72,8 @@ public class CavallMod
     public static class ClientModEvents
     {
         @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event)
-        {
+        public static void onClientSetup(FMLClientSetupEvent event) {
+            EntityRenderers.register(ModEntities.FOGFOX.get(), FogFoxRenderer::new);
 
         }
     }
