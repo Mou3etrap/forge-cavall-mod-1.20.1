@@ -17,6 +17,7 @@ public class FlockingGoal extends Goal {
 
     private final double flockRadius;
     // how far the mob considers neighbors
+    // how far away other mobs must be to consider them in the flock
     // small: 6-10
     // medium: 10-16
 
@@ -83,8 +84,7 @@ public class FlockingGoal extends Goal {
                 mob.getBoundingBox().inflate(flockRadius),
                 a -> a != mob && a.getClass() == mob.getClass()
         );
-
-        return !neighbors.isEmpty();
+        return !neighbors.isEmpty(); // returns false if there are no neighbors nearby
     }
 
     @Override
@@ -133,8 +133,8 @@ public class FlockingGoal extends Goal {
 
         if (returningToFlock) {
             returnForce = toCenter.normalize().scale(
-                    (distanceFromCenter - maxFlockDistance) * returnForceMultiplier
-            );
+                    (distanceFromCenter - maxFlockDistance) * returnForceMultiplier);
+            //System.out.println("Returning!");
         }
 
         if (mob.tickCount % updateInterval == 0 && !returningToFlock) {
@@ -147,14 +147,11 @@ public class FlockingGoal extends Goal {
 
         Vec3 randomVec = returningToFlock ? Vec3.ZERO : cachedRandomVec;
 
-        /* ---------- Combine forces ---------- */
-
         Vec3 moveVec = separation.scale(separationWeight)
                 .add(alignment.scale(alignmentWeight))
                 .add(cohesion.scale(cohesionWeight))
                 .add(returnForce)
                 .add(randomVec);
-
 
         double smoothing = 0.2;
         moveVec = lastMoveVec.scale(1 - smoothing).add(moveVec.scale(smoothing));

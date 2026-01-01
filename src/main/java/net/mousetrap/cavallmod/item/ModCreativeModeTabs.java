@@ -22,6 +22,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModItems.HAPLO_EYE.get());
                         pOutput.accept(ModItems.HAPLO_CLAW.get());
                         pOutput.accept(ModItems.FOGFOX_SPAWN_EGG.get());
+                        pOutput.accept(ModItems.FLAYFOLK_SPAWN_EGG.get());
 
                         pOutput.accept(ModBlocks.CAVALL_DIRT.get());
 

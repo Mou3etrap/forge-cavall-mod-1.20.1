@@ -1,4 +1,4 @@
-package net.mousetrap.cavallmod.entity.client;// Made with Blockbench 5.0.7
+package net.mousetrap.cavallmod.entity.client.FogFox;// Made with Blockbench 5.0.7
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
 
@@ -325,13 +325,13 @@ public class FogFoxModel<T extends Entity> extends HierarchicalModel<T> {
 		// 3. Walking animation
 		if (limbSwingAmount > 0.01F) {
 			// pMaxAnimationSpeed: makes gait run faster
-			this.animateWalk(ModAnimationDefinitions.FOGFOX_WALK,
+			this.animateWalk(ModAnimationDefinitions.HAPLO_WALK,
 					limbSwing, limbSwingAmount, 8f, 2f);
 		}
 		// 4. Idle animation (only when not moving)
 		else {
 			this.animate(((FogFoxEntity) entity).idleAnimationState,
-					ModAnimationDefinitions.FOGFOX_IDLE, ageInTicks, 1f);
+					ModAnimationDefinitions.HAPLO_IDLE, ageInTicks, 1f);
 		}
 	}
 	// look back into kaupens' code about an Apply Head Rotation method

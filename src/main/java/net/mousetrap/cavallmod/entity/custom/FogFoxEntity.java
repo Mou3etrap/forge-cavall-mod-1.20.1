@@ -4,45 +4,58 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.AgeableMob;
-import net.minecraft.world.entity.AnimationState;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
+import net.mousetrap.cavallmod.entity.CavallCreature;
 import net.mousetrap.cavallmod.entity.ModEntities;
+import net.mousetrap.cavallmod.entity.custom.customgoals.FightOrFlightGoal;
+import net.mousetrap.cavallmod.entity.custom.customgoals.FlagBasedFleeGoal;
+import net.mousetrap.cavallmod.entity.custom.customgoals.FlagBasedMeleeAttackGoal;
 import net.mousetrap.cavallmod.entity.custom.customgoals.FlockingGoal;
+import net.mousetrap.cavallmod.util.ModTags;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class FogFoxEntity extends Animal {
+public class FogFoxEntity extends CavallCreature {
     public FogFoxEntity(EntityType<? extends Animal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
-
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState poseAnimationState = new AnimationState();
+    public final AnimationState attackAnimationState = new AnimationState();
 
     private int idleAnimationTimeout = 0;
+    public int attackAnimationTimeout = 0;
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new BreedGoal(this, 1.25));
         this.goalSelector.addGoal(1, new TemptGoal(this, 1.25, Ingredient.of(Items.CARROT), false));
+        this.goalSelector.addGoal(1, new FlagBasedFleeGoal(this, 1.5));
+        this.goalSelector.addGoal(1, new FlagBasedMeleeAttackGoal(this, 1.1, true, 10,10));
+
+        this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
+        this.goalSelector.addGoal(2, new FightOrFlightGoal(this, 20, 15, 20, 0.4, 0.4, ModTags.FOGFOX_PREDATORS));
+
         this.goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 1));
         this.goalSelector.addGoal(2, new FlockingGoal(this, 1.0, 15.0, 1.5, 0.4, 0.5, 0.2, 12, 1, 5));
+
         this.goalSelector.addGoal(3, new FollowParentGoal(this, 1.25));
-        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
+
+        //this.goalSelector.addGoal(2, new FlagBasedMeleeAttackGoal(this, 1.15,true, ));
+
+        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -53,6 +66,8 @@ public class FogFoxEntity extends Animal {
             this.poseAnimationState.startIfStopped(this.tickCount);
             setupAnimationStates();
         }
+
+        // automatic breeding
         // every tick the entity looks for another fogfox
         // and has a chance to set them both into love mode
         if (!this.level().isClientSide && !this.isBaby()) {
@@ -84,7 +99,15 @@ public class FogFoxEntity extends Animal {
         } else {
             --this.idleAnimationTimeout;
         }
-
+        if (this.isAttacking() && attackAnimationTimeout <= 0){
+            attackAnimationTimeout = 20; // length of attack animation in ticks
+            attackAnimationState.start(this.tickCount);
+        } else{
+            --this.attackAnimationTimeout;
+        }
+        if (!this.isAttacking()){
+            attackAnimationState.stop();
+        }
     }
 
     @Override

@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "cavallmod:xylo_planks"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_xylo_log": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "cavallmod:xylo_log"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_xylo_log",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "cavallmod:xylo_planks"
+    ]
+  },
+  "sends_telemetry_event": false
+}

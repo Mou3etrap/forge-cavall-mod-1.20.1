@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column_horizontal",
+  "textures": {
+    "end": "cavallmod:block/xylo_log_top",
+    "side": "cavallmod:block/xylo_log"
+  }
+}

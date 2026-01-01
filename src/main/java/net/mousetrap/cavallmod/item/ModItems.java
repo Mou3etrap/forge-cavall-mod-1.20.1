@@ -23,6 +23,9 @@ public class ModItems {
     public static final RegistryObject<Item> FOGFOX_SPAWN_EGG = ITEMS.register("fogfox_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.FOGFOX, 0x931932, 0x671728,
                     new Item.Properties()));
+    public static final RegistryObject<Item> FLAYFOLK_SPAWN_EGG = ITEMS.register("flayfolk_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.FOGFOX, 0x671728, 0x931932,
+                    new Item.Properties()));
 
 
     // registering the deferred register

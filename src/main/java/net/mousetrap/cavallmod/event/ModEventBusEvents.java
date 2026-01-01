@@ -6,6 +6,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.mousetrap.cavallmod.CavallMod;
 import net.mousetrap.cavallmod.entity.ModEntities;
+import net.mousetrap.cavallmod.entity.custom.FlayFolkEntity;
 import net.mousetrap.cavallmod.entity.custom.FogFoxEntity;
 
 
@@ -14,6 +15,7 @@ public class ModEventBusEvents {
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event){
         event.put(ModEntities.FOGFOX.get(), FogFoxEntity.createAttributes().build());
+        event.put(ModEntities.FLAYFOLK.get(), FlayFolkEntity.createAttributes().build());
     }
 }
 
