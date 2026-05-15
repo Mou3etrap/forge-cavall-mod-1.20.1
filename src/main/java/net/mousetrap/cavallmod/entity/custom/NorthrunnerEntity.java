@@ -4,7 +4,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.AnimationState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -17,30 +20,28 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.mousetrap.cavallmod.entity.CavallCreature;
 import net.mousetrap.cavallmod.entity.ModEntities;
-import net.mousetrap.cavallmod.entity.custom.customgoals.*;
+import net.mousetrap.cavallmod.entity.custom.customgoals.FightOrFlightGoal;
+import net.mousetrap.cavallmod.entity.custom.customgoals.FlagBasedFleeGoal;
+import net.mousetrap.cavallmod.entity.custom.customgoals.FlagBasedMeleeAttackGoal;
+import net.mousetrap.cavallmod.entity.custom.customgoals.FlockingGoal;
 import net.mousetrap.cavallmod.tags.ModTags;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class FogFoxEntity extends CavallCreature {
-    public FogFoxEntity(EntityType<? extends Animal> pEntityType, Level pLevel) {
+public class NorthrunnerEntity extends CavallCreature {
+    public NorthrunnerEntity(EntityType<? extends Animal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState poseAnimationState = new AnimationState();
-    public final AnimationState attackAnimationState = new AnimationState();
 
     private int idleAnimationTimeout = 0;
-    public int attackAnimationTimeout = 0;
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new FightOrFlightGoal(this, 20, flockRadius, 0.5, 0.4, ModTags.FOGFOX_PREDATORS, true, 1));
-
-        this.goalSelector.addGoal(2, new FlagBasedFleeGoal(this, 1.5, ModTags.FOGFOX_PREDATORS, 20, 30, 2));
         this.goalSelector.addGoal(2, new FlagBasedMeleeAttackGoal(this, 1.1, true, 10, 10));
 
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1));
@@ -88,7 +89,7 @@ public class FogFoxEntity extends CavallCreature {
             if (timer1 == onTheMoveTimeout) { // if its time to start the timeout
                 this.setOnTheMoveTo(true);
                 // set their allies to OnTheMove as well
-                List<? extends CavallCreature> neighbors = getNeighbors(this, flockRadius, FogFoxEntity.class);
+                List<? extends CavallCreature> neighbors = getNeighbors(this, flockRadius, NorthrunnerEntity.class);
                 for (CavallCreature member : neighbors){
                     member.setOnTheMoveTo(true);
                 }
@@ -100,7 +101,7 @@ public class FogFoxEntity extends CavallCreature {
             if (timer2 == howLongOnTheMove){ // if its time to stop being on the move
                 this.resetFlagsToIdle(); // resets to idle
                 // set their allies to OnTheMove as well
-                List<? extends CavallCreature> neighbors = getNeighbors(this, flockRadius, FogFoxEntity.class);
+                List<? extends CavallCreature> neighbors = getNeighbors(this, flockRadius, NorthrunnerEntity.class);
                 for (CavallCreature member : neighbors){
                     member.resetFlagsToIdle(); // resets to idle
                 }
@@ -141,15 +142,6 @@ public class FogFoxEntity extends CavallCreature {
         } else {
             --this.idleAnimationTimeout;
         }
-        if (this.isAttacking() && attackAnimationTimeout <= 0){
-            attackAnimationTimeout = 20; // length of attack animation in ticks
-            attackAnimationState.start(this.tickCount);
-        } else{
-            --this.attackAnimationTimeout;
-        }
-        if (!this.isAttacking()){
-            attackAnimationState.stop();
-        }
     }
 
     @Override
@@ -166,10 +158,10 @@ public class FogFoxEntity extends CavallCreature {
     public static AttributeSupplier.Builder createAttributes() {
         return Animal.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 12D)
-                .add(Attributes.ATTACK_DAMAGE,2D)
+                .add(Attributes.ATTACK_DAMAGE,3D)
                 .add(Attributes.ATTACK_KNOCKBACK,0.2)
-                .add(Attributes.ATTACK_SPEED, 1.1)
-                .add(Attributes.MOVEMENT_SPEED, 0.2D)
+                .add(Attributes.ATTACK_SPEED, 1.5)
+                .add(Attributes.MOVEMENT_SPEED, 0.3D)
                 .add(Attributes.FOLLOW_RANGE, 24D);
     }
 
@@ -183,7 +175,7 @@ public class FogFoxEntity extends CavallCreature {
     @Override
     public @Nullable AgeableMob getBreedOffspring(ServerLevel pLevel, AgeableMob pOtherParent) {
         // return ModEntities.FOGFOX.get().create(pLevel);
-        FogFoxEntity baby = ModEntities.FOGFOX.get().create(pLevel);
+        NorthrunnerEntity baby = ModEntities.NORTHRUNNER.get().create(pLevel);
         if (baby != null) baby.setBaby(true); // VERY IMPORTANT
         return baby;
     }
@@ -192,6 +184,7 @@ public class FogFoxEntity extends CavallCreature {
     public boolean canMate(Animal otherAnimal) {
         // Only allow mating rarely
         if (otherAnimal.getClass() != this.getClass()) return false;
+
         if (!this.isIdling()) return false; // if the animal isnt idling, it cant breed
 
         // chance of breeding

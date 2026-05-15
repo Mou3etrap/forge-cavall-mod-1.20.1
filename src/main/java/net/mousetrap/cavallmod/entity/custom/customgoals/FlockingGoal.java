@@ -5,6 +5,7 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Comparator;
 import java.util.List;
 public class FlockingGoal extends Goal {
 
@@ -96,14 +97,12 @@ public class FlockingGoal extends Goal {
                 mob.getBoundingBox().inflate(flockRadius),
                 a -> a != mob && a.getClass() == mob.getClass()
         );
-
-        if (neighbors.isEmpty()) return;
+        if (neighbors.isEmpty()) return; // if there's no flock, nothing can be done
+        // technically this should never return because the canUse covers for this
 
         Vec3 separation = Vec3.ZERO;
         Vec3 alignment = Vec3.ZERO;
         Vec3 cohesion = Vec3.ZERO;
-        Vec3 flockCenter = Vec3.ZERO;
-
 
         for (Animal neighbor : neighbors) {
             Vec3 toNeighbor = neighbor.position().subtract(mob.position());
@@ -114,28 +113,50 @@ public class FlockingGoal extends Goal {
                         toNeighbor.normalize().scale(1.0 / distance)
                 );
             }
-
             alignment = alignment.add(neighbor.getDeltaMovement());
             cohesion = cohesion.add(toNeighbor);
-            flockCenter = flockCenter.add(neighbor.position());
+
         }
 
         int count = neighbors.size();
         alignment = alignment.scale(1.0 / count);
         cohesion = cohesion.scale(1.0 / count);
-        flockCenter = flockCenter.scale(1.0 / count);
 
-        Vec3 toCenter = flockCenter.subtract(mob.position());
-        double distanceFromCenter = toCenter.length();
 
-        Vec3 returnForce = Vec3.ZERO;
-        boolean returningToFlock = distanceFromCenter > maxFlockDistance;
-
-        if (returningToFlock) {
-            returnForce = toCenter.normalize().scale(
-                    (distanceFromCenter - maxFlockDistance) * returnForceMultiplier);
-            //System.out.println("Returning!");
+        int k = 6; // using (up to) k nearest neighbors to return to
+        // sorting the already-established neighbors by distance
+        neighbors.sort(Comparator.comparingDouble(a -> a.distanceToSqr(mob)));
+        // Take up to k nearest --> save as j
+        // required for flocks of less than k to be functional
+        int j = Math.min(neighbors.size(), k);
+        // compute local center of nearest j neighbors
+        Vec3 localCenter = Vec3.ZERO;
+        for (int i = 0; i < j; i++) {
+            localCenter = localCenter.add(neighbors.get(i).position());
         }
+        localCenter = localCenter.scale(1.0 / j);
+        // measure distance to local center
+        Vec3 toLocalCenter = localCenter.subtract(mob.position());
+        double distanceFromLocal = toLocalCenter.length();
+        // return to flock
+        Vec3 returnForce = Vec3.ZERO;
+        boolean returningToFlock = distanceFromLocal > maxFlockDistance;
+        if (returningToFlock) {
+            returnForce = toLocalCenter.normalize().scale(
+                    (distanceFromLocal - maxFlockDistance) * returnForceMultiplier
+            );
+        }
+//        Vec3 toCenter = flockCenter.subtract(mob.position());
+//        double distanceFromCenter = toCenter.length();
+//
+//        Vec3 returnForce = Vec3.ZERO;
+//        boolean returningToFlock = distanceFromCenter > maxFlockDistance;
+//
+//        if (returningToFlock) {
+//            returnForce = toCenter.normalize().scale(
+//                    (distanceFromCenter - maxFlockDistance) * returnForceMultiplier);
+//            //System.out.println("Returning!");
+//        }
 
         if (mob.tickCount % updateInterval == 0 && !returningToFlock) {
             cachedRandomVec = new Vec3(
@@ -156,7 +177,6 @@ public class FlockingGoal extends Goal {
         double smoothing = 0.2;
         moveVec = lastMoveVec.scale(1 - smoothing).add(moveVec.scale(smoothing));
         lastMoveVec = moveVec;
-
 
         if (moveVec.lengthSqr() > 0.0001) {
             moveVec = moveVec.normalize().scale(speed);

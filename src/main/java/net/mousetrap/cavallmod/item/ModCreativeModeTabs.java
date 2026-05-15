@@ -14,6 +14,8 @@ public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CavallMod.MOD_ID);
 
+    // the tab itself
+    // the ItemStack(ModItems.HAPLO_EYE.get()) is what makes the tab's picture a haplo eye
     public static final RegistryObject<CreativeModeTab> CAVALL_TAB = CREATIVE_MODE_TABS.register("cavall_tab",
             () -> CreativeModeTab.builder().icon(() -> new ItemStack(ModItems.HAPLO_EYE.get()))
                     .title(Component.translatable("creativetab.cavall_tab"))
@@ -23,6 +25,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModItems.HAPLO_CLAW.get());
                         pOutput.accept(ModItems.FOGFOX_SPAWN_EGG.get());
                         pOutput.accept(ModItems.FLAYFOLK_SPAWN_EGG.get());
+                        pOutput.accept(ModItems.NORTHRUNNER_SPAWN_EGG.get());
 
                         pOutput.accept(ModBlocks.CAVALL_DIRT.get());
 

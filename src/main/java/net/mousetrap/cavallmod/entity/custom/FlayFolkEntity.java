@@ -15,10 +15,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.mousetrap.cavallmod.entity.CavallCreature;
 import net.mousetrap.cavallmod.entity.ModEntities;
 import net.mousetrap.cavallmod.entity.custom.customgoals.*;
-import net.mousetrap.cavallmod.util.ModTags;
+import net.mousetrap.cavallmod.tags.ModTags;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -35,28 +36,34 @@ public class FlayFolkEntity extends CavallCreature {
 
     public int idleAnimationTimeout = 0;
     public int attackAnimationTimeout = 0;
-
+    //public boolean wasHiddenAmbushing = false;
+    //private double originalY = 0.0;
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new FlagBasedFleeGoal(this, 1.25));
+        this.goalSelector.addGoal(1, new FlagBasedFleeGoal(this, 1.25, ModTags.FLAYFOLK_PREDATORS, 20, 30, 2));
         this.goalSelector.addGoal(1, new FlagBasedMeleeAttackGoal(this, 1.25,true, 8, 12));
-        this.goalSelector.addGoal(1, new AmbushAttackGoal(this, 10));
-        this.goalSelector.addGoal(1, new FightOrFlightGoal(this, 500, 20, 20, 0.8, 0.1, ModTags.FLAYFOLK_PREDATORS));
 
-        this.goalSelector.addGoal(2, new BreedGoal(this, 1.25));
-        this.goalSelector.addGoal(2, new TemptGoal(this, 1.25, Ingredient.of(Items.CARROT), false));
+        this.goalSelector.addGoal(1, new FightOrFlightGoal(this, 500, 20, 0.8, 0.1, ModTags.FLAYFOLK_PREDATORS, true, 2));
 
-        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 1));
-        this.goalSelector.addGoal(3, new FlockingGoal(this, 1.0, 20.0, 1.5, 0.2, 0.2, 0.1, 15, 1, 5));
+        this.goalSelector.addGoal(2, new FlockingGoal(this, 1.0, 20.0, 1.5, 0.2, 0.2, 0.1, 15, 1, 5));
         this.goalSelector.addGoal(3, new FollowParentGoal(this, 1.25));
 
+        //this.goalSelector.addGoal(4, new KeepingStillAmbushGoal(this, ModTags.FLAYFOLK_PREY, 60,15, 1.5, 0));
+
+        this.goalSelector.addGoal(1, new MultipurposeAmbushGoal(this, 45, 15, 1.5, 0.0));
+
+        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1));
+
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(6, new BreedGoal(this, 1.25));
+        this.goalSelector.addGoal(6, new TemptGoal(this, 1.25, Ingredient.of(Items.CARROT), false));
 
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, LivingEntity.class, 200, false, false, ModEntities.buildPredicateFromTag(ModTags.FLAYFOLK_PREY)));
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
 
+        //this.goalSelector.addGoal(1, new AmbushAttackGoal(this, 25, 16));
 
         //this.goalSelector.addGoal(4, new GetReadyToAmbushGoal(this));
     }
@@ -70,25 +77,26 @@ public class FlayFolkEntity extends CavallCreature {
             setupAnimationStates();
         }
 
-        // automatic breeding
-        // every tick the entity looks for another fogfox
-        // and has a chance to set them both into love mode
-        if (!this.level().isClientSide && !this.isBaby()) {
-            // find nearby adult of same species
-            List<FlayFolkEntity> nearby = this.level().getEntitiesOfClass(FlayFolkEntity.class,
-                    this.getBoundingBox().inflate(2.0D),
-                    f -> f != this && !f.isBaby());
-
-            // looping through every fogfox nearby
-            for (FlayFolkEntity mate : nearby) {
-                if (this.canMate(mate)) { // the canMate method contains the chance
-                    this.setInLove(null);
-                    mate.setInLove(null);
-                    AgeableMob baby = this.getBreedOffspring((ServerLevel) this.level(), mate);
-                    baby.moveTo(this.getX(), this.getY(), this.getZ(), 0, 0); // position baby at parent
-                    this.level().addFreshEntity(baby);
-                    break;
-                }
+        // Sprinting
+        if (this.isPursuing() || this.isFleeing()) {
+            // if the pursuing flag or fleeing flag is true, start sprinting
+            this.setSprinting(true);
+            this.setSprintJumpingTo(true); // this animal can sprint jump
+        } else {
+            this.setSprinting(false);
+            this.setSprintJumpingTo(false);
+        }
+        // Sprint-jump impulse
+        if (this.isSprintJumping() && this.onGround()) {
+            // if the animal's sprintjumping flag is true
+            // and the animal is on the ground
+            if (this.getRandom().nextInt(10) == 0) {
+                Vec3 look = this.getLookAngle(); // initialize current direction
+                this.setDeltaMovement( // jump in that direction
+                        look.x * 0.6,
+                        0.45, // y direction "power"
+                        look.z * 0.6
+                );
             }
         }
     }
@@ -102,6 +110,7 @@ public class FlayFolkEntity extends CavallCreature {
         } else {
             --this.idleAnimationTimeout;
         }
+
         if (this.isAttacking() && attackAnimationTimeout <= 0){
             attackAnimationTimeout = 20; // length of attack animation in ticks
             attackAnimationState.start(this.tickCount);
@@ -110,6 +119,18 @@ public class FlayFolkEntity extends CavallCreature {
         }
         if (!this.isAttacking()){
             attackAnimationState.stop();
+        }
+
+        if (this.isHiddenAmbushing() ){ //&& !wasHiddenAmbushing){
+            waitingToAmbushAnimationState.start(this.tickCount);
+            //originalY = this.getY();
+            //this.setPos(this.getX(), originalY - 0.5, this.getZ()); // Lower into ground
+            //wasHiddenAmbushing = true;
+        }
+        if (!this.isHiddenAmbushing() ){ // && wasHiddenAmbushing){
+            waitingToAmbushAnimationState.stop();
+            //this.setPos(this.getX(), originalY, this.getZ()); // Restore position
+            //wasHiddenAmbushing = false; // sets it back to false again
         }
     }
 
@@ -127,9 +148,13 @@ public class FlayFolkEntity extends CavallCreature {
     public static AttributeSupplier.Builder createAttributes() {
         return Animal.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 20D)
+                .add(Attributes.ATTACK_DAMAGE, 4D)
+                .add(Attributes.ATTACK_KNOCKBACK,0.5)
+                .add(Attributes.ATTACK_SPEED, 1.1)
                 .add(Attributes.MOVEMENT_SPEED, 0.25D)
                 .add(Attributes.FOLLOW_RANGE, 24D);
     }
+
     @Override
     public boolean isFood(ItemStack pStack) {
         return pStack.is(Items.CARROT);
@@ -149,8 +174,10 @@ public class FlayFolkEntity extends CavallCreature {
     public boolean canMate(Animal otherAnimal) {
         // Only allow mating rarely
         if (otherAnimal.getClass() != this.getClass()) return false;
-        // chance of breeding
-        return this.random.nextInt(10000) == 0 && !this.isBaby() && !otherAnimal.isBaby();
+
+        if (!this.isIdling()) return false; // if the animal isnt idling, it cant breed
+
+        return this.random.nextInt(60000) == 0 && !this.isBaby() && !otherAnimal.isBaby();
     }
 
     @Override

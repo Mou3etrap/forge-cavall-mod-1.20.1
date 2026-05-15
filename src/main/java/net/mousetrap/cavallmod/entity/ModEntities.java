@@ -12,6 +12,7 @@ import net.minecraftforge.registries.RegistryObject;
 import net.mousetrap.cavallmod.CavallMod;
 import net.mousetrap.cavallmod.entity.custom.FlayFolkEntity;
 import net.mousetrap.cavallmod.entity.custom.FogFoxEntity;
+import net.mousetrap.cavallmod.entity.custom.NorthrunnerEntity;
 
 import java.util.function.Predicate;
 
@@ -27,8 +28,11 @@ public class ModEntities {
 
     public static final RegistryObject<EntityType<FlayFolkEntity>> FLAYFOLK =
             ENTITY_TYPES.register("flayfolk", () -> EntityType.Builder.of(FlayFolkEntity::new,
-                    MobCategory.CREATURE).sized(1F,2F).build("flayfolk"));
+                    MobCategory.CREATURE).sized(1F,3F).build("flayfolk"));
 
+    public static final RegistryObject<EntityType<NorthrunnerEntity>> NORTHRUNNER =
+            ENTITY_TYPES.register("northrunner", () -> EntityType.Builder.of(NorthrunnerEntity::new,
+                    MobCategory.CREATURE).sized(1.2F,1F).build("northrunner"));
 
 
 

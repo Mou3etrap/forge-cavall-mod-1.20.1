@@ -1,7 +1,6 @@
 package net.mousetrap.cavallmod.entity.custom.customgoals;
 
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.mousetrap.cavallmod.entity.CavallCreature;
@@ -11,11 +10,6 @@ import java.util.List;
 public class FightOrFlightGoal extends Goal {
 
     private final CavallCreature self;
-    private final int checkForPredatorsInterval;
-    // interval which the cooldown is set to
-    // how often they look for predators
-    private int cooldown;
-    // timer variable for checkForPredatorsInterval
 
     private final int predatorRadius;
     // how far they look for predators
@@ -31,39 +25,57 @@ public class FightOrFlightGoal extends Goal {
     // the tag for the predator, such as FOGFOX_PREDATORS
     // which is needed because the isPredatorNearby() method is in the base class
     // and must be given the tag itself for each creature
+    private boolean selfDefending;
+    private int selfDefenseRadius;
     private int initialHerdSize;
+    private boolean decisionMade = false;
+    private int selfDefenseCountdown = 40;
+    // the animal will defend itself for 2 seconds if neared too close by a predator
+    private int selfDefenseCountdownTimer; // variable that is counted down
+
 
     public FightOrFlightGoal(
             CavallCreature self,
-            int checkForPredatorsInterval,
             int predatorRadius,
             double allyRadius,
             double aggression,
             double panicThreshold,
-            TagKey<EntityType<?>> predatorTag
+            TagKey<EntityType<?>> predatorTag,
+            boolean selfDefending,
+            int selfDefenseRadius
     ) {
         this.self = self;
-        this.checkForPredatorsInterval = checkForPredatorsInterval;
         this.predatorRadius = predatorRadius;
         this.allyRadius = allyRadius;
         this.aggression = aggression;
-        this.cooldown = checkForPredatorsInterval;
         this.panicThreshold = panicThreshold;
-        this.initialHerdSize = 0;
         this.predatorTag = predatorTag;
+        this.selfDefending = selfDefending;
+        this.selfDefenseRadius = selfDefenseRadius;
     }
 
     @Override
     public boolean canUse() {
-        if (--cooldown > 0) return false; // if the cooldown is still counting down, the mob cant use this method yet. the cooldown should NOT be large -- maybe every second
-        // if cooldown has reached zero, reset it
-        cooldown = checkForPredatorsInterval;
-        return self.isPredatorNearby(predatorRadius, predatorTag);
+        return self.isAnimalWithCertainTagNearby(predatorRadius, predatorTag);
     }
+
     @Override
     public boolean canContinueToUse() {
-        // keep running while the mob is flagged to fight or flee
-        return (self.isFighting() || self.isFleeing()) && self.isPredatorNearby(predatorRadius, predatorTag);
+        return self.isAnimalWithCertainTagNearby(predatorRadius, predatorTag);
+    }
+
+    @Override
+    public void start() {
+        decisionMade = false; // reset for this predator encounter
+        initialHerdSize = 0;
+    }
+
+    @Override
+    public void stop() {
+        decisionMade = false; // allow new decision next time
+        initialHerdSize = 0;
+        self.setPursuingTo(false);
+        self.setFleeingTo(false);
     }
 
     @Override
@@ -73,46 +85,50 @@ public class FightOrFlightGoal extends Goal {
                 self.getBoundingBox().inflate(allyRadius),
                 a -> a.getType() == self.getType()
         );
-        if (this.initialHerdSize == 0){
-            this.initialHerdSize = herd.size();
+        if (herd.isEmpty()) return;
+
+        if (initialHerdSize == 0) {
+            initialHerdSize = herd.size();
         }
+
         int currentHerdSize = herd.size();
         int minHerdSize = (int) (initialHerdSize * (1.0 - panicThreshold));
-        if (currentHerdSize < minHerdSize) {
-            for (CavallCreature member : herd){
-                member.setFleeingTo(true);
-                member.setFightingTo(false); // force panic
-            }
+
+        if (selfDefending && self.isAnimalWithCertainTagNearby(selfDefenseRadius, predatorTag)){
+            // if the prey is self-defending and
+            // if a predator nears the prey by one block it will automatically switch to self-defense
+            self.setPursuingTo(true);
+            self.setFleeingTo(false);
         }
-    }
 
-    @Override
-    public void start() {
-        List<CavallCreature> herd = self.level().getEntitiesOfClass(
-                CavallCreature.class,
-                self.getBoundingBox().inflate(allyRadius),
-                a -> a.getType() == self.getType()
-        );
-        int currentHerdSize = herd.size();
-        // fightChance represents how confident the whole herd feels
-        // higher the more members there are
-        float fightChance = Math.min(1.0F, currentHerdSize * (float) aggression);
-
-        // for every animal in the herd
-        for (CavallCreature member : herd) {
-            // willFight is true if a random number is less than fightChance
-            // (higher fightChance == more confident herd == more likely to be greater than a random number)
-            // and the agression is also put against a random number
-            // to decide individual confidence
-            boolean willFight = member.getRandom().nextFloat() < fightChance &&
-                    member.getRandom().nextFloat() < aggression;
-            if (willFight) {
-                //member.setFleeingTo(false); // stop fleeing!!
-                member.setFightingTo(true); // fight!!
-            } else {
-                //member.setFightingTo(false); // stop fighting!!
-                member.setFleeingTo(true); // flee!!!
+        // force panic
+        if (currentHerdSize < minHerdSize) {
+            for (CavallCreature member : herd) {
+                member.setFleeingTo(true);
+                member.setPursuingTo(false);
             }
+            return;
+        }
+
+        if (!decisionMade) {
+            float fightChance = Math.min(1.0F, currentHerdSize * (float) aggression);
+
+            for (CavallCreature member : herd) {
+                boolean willFight =
+                        member.getRandom().nextFloat() < fightChance
+                                && member.getRandom().nextFloat() < aggression;
+
+                if (willFight) {
+                    member.setPursuingTo(true);
+                    member.setFleeingTo(false);
+                    System.out.println("Pursuing! My FIGHTING flag is "+member.isPursuing()+" and my FLEEING tag is "+member.isFleeing());
+                } else {
+                    member.setFleeingTo(true);
+                    member.setPursuingTo(false);
+                    System.out.println("Fleeing! My FLEEING flag is "+member.isFleeing()+" and my FIGHTING tag is "+member.isPursuing());
+                }
+            }
+            decisionMade = true;
         }
     }
 }

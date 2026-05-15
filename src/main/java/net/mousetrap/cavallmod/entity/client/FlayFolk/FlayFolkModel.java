@@ -348,10 +348,12 @@ public class FlayFolkModel<T extends Entity> extends HierarchicalModel<T> {
 		this.animate(((FlayFolkEntity) entity).poseAnimationState, ModAnimationDefinitions.FLAYFOLK_INITIAL_POSE, ageInTicks, 1f);
 		this.animate(((FlayFolkEntity) entity).attackAnimationState, ModAnimationDefinitions.FLAYFOLK_ATTACK, ageInTicks, 1f);
 
-		// 3. Walking animation
-		if (flayfolkEntity.isWaitingToAmbush()){
+
+
+		if (flayfolkEntity.isHiddenAmbushing()){
 			this.animate(((FlayFolkEntity) entity).waitingToAmbushAnimationState,
 					ModAnimationDefinitions.FLAYFOLK_AMBUSH_POSE, ageInTicks, 1f);
+
 		} else if (limbSwingAmount > 0.01F) {
 			// pMaxAnimationSpeed: makes gait run faster
 			this.animateWalk(ModAnimationDefinitions.FLAYFOLK_WALK,

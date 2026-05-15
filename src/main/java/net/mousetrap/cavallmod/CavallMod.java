@@ -16,9 +16,9 @@ import net.mousetrap.cavallmod.block.entity.ModBlocks;
 import net.mousetrap.cavallmod.entity.ModEntities;
 import net.mousetrap.cavallmod.entity.client.FlayFolk.FlayFolkRenderer;
 import net.mousetrap.cavallmod.entity.client.FogFox.FogFoxRenderer;
+import net.mousetrap.cavallmod.entity.client.Northrunner.NorthrunnerRenderer;
 import net.mousetrap.cavallmod.item.ModCreativeModeTabs;
 import net.mousetrap.cavallmod.item.ModItems;
-import net.mousetrap.cavallmod.util.ModTags;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -33,6 +33,7 @@ public class CavallMod
     public CavallMod(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
 
+        // registers all the new stuff
         ModCreativeModeTabs.register(modEventBus);
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
@@ -77,6 +78,7 @@ public class CavallMod
         public static void onClientSetup(FMLClientSetupEvent event) {
             EntityRenderers.register(ModEntities.FOGFOX.get(), FogFoxRenderer::new);
             EntityRenderers.register(ModEntities.FLAYFOLK.get(), FlayFolkRenderer::new);
+            EntityRenderers.register(ModEntities.NORTHRUNNER.get(), NorthrunnerRenderer::new);
 
         }
     }

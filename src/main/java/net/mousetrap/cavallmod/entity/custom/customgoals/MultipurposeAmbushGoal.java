@@ -5,19 +5,25 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.mousetrap.cavallmod.entity.CavallCreature;
 
 import java.util.EnumSet;
+import java.util.List;
 
-public class AmbushAttackGoal extends Goal {
+public class MultipurposeAmbushGoal extends Goal {
     private final CavallCreature mob;
     private LivingEntity target;
     private int attackTime;
-    private int detectionDistance;
-    private double leapDist;
+    private final int detectionDistance;
+    private final double leapDist;
+    private final double leapingSpeed;
+    private final double stalkingSpeed;
 
-    public AmbushAttackGoal(CavallCreature pMob, int detectionDistance, double leapDist) {
+    public MultipurposeAmbushGoal(CavallCreature pMob, int detectionDistance, double leapDist, double leapingSpeed, double stalkingSpeed) {
         this.mob = pMob;
         this.detectionDistance = detectionDistance;
         this.leapDist = leapDist;
-        this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+        this.leapingSpeed = leapingSpeed;
+        this.stalkingSpeed = stalkingSpeed;
+
+        this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
     /**
@@ -56,6 +62,21 @@ public class AmbushAttackGoal extends Goal {
         this.target = null;
         this.mob.getNavigation().stop();
         this.mob.setAttackingTo(false);
+        this.mob.setHiddenAmbushingTo(false);
+    }
+
+    @Override
+    public void start() {
+        // set yourself to hidden ambushing
+        this.mob.setHiddenAmbushingTo(true);
+        // set everybody else to HiddenAmbushing
+        List<CavallCreature> herd = mob.level().getEntitiesOfClass(CavallCreature.class, mob.getBoundingBox().inflate(detectionDistance), a -> a.getType() == mob.getType());
+        for (CavallCreature member : herd) {
+            if (!member.isHiddenAmbushing()){
+                member.setHiddenAmbushingTo(true);
+            }
+        }
+        //super.start();
     }
 
     public boolean requiresUpdateEveryTick() {
@@ -69,6 +90,12 @@ public class AmbushAttackGoal extends Goal {
         this.mob.getLookControl().setLookAt(this.target, 30.0F, 30.0F);
         // makes its head look at target
 
+        List<CavallCreature> herd = mob.level().getEntitiesOfClass(
+                CavallCreature.class,
+                mob.getBoundingBox().inflate(detectionDistance),
+                a -> a.getType() == mob.getType()
+        );
+
         double bbD = (double)(this.mob.getBbWidth() * 2.0F * this.mob.getBbWidth() * 2.0F);
         // BbWidth is the bounding box width, so this line is a formula wich calculates a box around the predator
         // and that box is the "possible attack reach distance" if that makes sense
@@ -77,11 +104,18 @@ public class AmbushAttackGoal extends Goal {
 
         double distSqr = this.mob.distanceToSqr(this.target.getX(), this.target.getY(), this.target.getZ());
         // computes square of distance to target. this is easier on the computer for Pythagorean reasons
-        double speed = 0.8D;
-        if (distSqr > bbD && distSqr <= (leapDist*leapDist)) {
-            speed = 1.33D; // leaping speed
+
+        double speed = 0.0;
+        if ( (distSqr > bbD && distSqr <= (leapDist*leapDist)) ) {
+            for (CavallCreature member : herd) { // everyone also attack
+                member.getNavigation().moveTo(this.target, speed);
+                member.setHiddenAmbushingTo(false);
+                speed = leapingSpeed; // leaping speed
+                this.mob.setSprintJumpingTo(true);
+            }
         } else if (distSqr < detectionDistance) {
-            speed = 0.6D; // stalking speed
+            speed = stalkingSpeed; // stalking speed
+            this.mob.setSprintJumpingTo(false);
         }
 
         this.mob.getNavigation().moveTo(this.target, speed);
