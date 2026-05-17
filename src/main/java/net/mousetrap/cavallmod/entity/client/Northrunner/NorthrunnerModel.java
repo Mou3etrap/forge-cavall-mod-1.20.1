@@ -16,6 +16,7 @@ import net.mousetrap.cavallmod.entity.custom.NorthrunnerEntity;
 
 public class NorthrunnerModel<T extends Entity> extends HierarchicalModel<T> {
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation("modid", "northrunner"), "main");
+    private final ModelPart root;
     private final ModelPart northrunner;
     private final ModelPart legs;
     private final ModelPart right_leg;
@@ -29,7 +30,9 @@ public class NorthrunnerModel<T extends Entity> extends HierarchicalModel<T> {
     private final ModelPart head;
     private final ModelPart tail;
 
+
     public NorthrunnerModel(ModelPart root) {
+        this.root = root;
         this.northrunner = root.getChild("northrunner");
         this.legs = this.northrunner.getChild("legs");
         this.right_leg = this.legs.getChild("right_leg");
@@ -97,10 +100,11 @@ public class NorthrunnerModel<T extends Entity> extends HierarchicalModel<T> {
         this.root().getAllParts().forEach(ModelPart::resetPose);
         this.applyHeadRotation(netHeadYaw, headPitch, ageInTicks);
 
+        // these lines link the idleAnimationState to the animation called NORTHRUNNER_INIT_POSE, etc.
         this.animate(((NorthrunnerEntity) entity).idleAnimationState, ModAnimationDefinitions.NORTHRUNNER_INIT_POSE, ageInTicks, 1f);
-        //this.animate(((NorthrunnerEntity) entity).sittingProcessAnimationState, ModAnimationDefinitions.NORTHRUNNER_SITTING_PROCESS_ANIMATION, ageInTicks, 1f);
-        //this.animate(((NorthrunnerEntity) entity).sittingAnimationState, ModAnimationDefinitions.NORTHRUNNER_SITTING_POSE, ageInTicks, 1f);
-        //this.animate(((NorthrunnerEntity) entity).standingUpProcessAnimationState, ModAnimationDefinitions.NORTHRUNNER_STANDING_PROCESS_ANIMATION, ageInTicks, 1f);
+        this.animate(((NorthrunnerEntity) entity).sittingProcessAnimationState, ModAnimationDefinitions.NORTHRUNNER_SITTING_PROCESS_ANIMATION, ageInTicks, 1f);
+        this.animate(((NorthrunnerEntity) entity).sittingAnimationState, ModAnimationDefinitions.NORTHRUNNER_SITTING_POSE, ageInTicks, 1f);
+        this.animate(((NorthrunnerEntity) entity).standingUpProcessAnimationState, ModAnimationDefinitions.NORTHRUNNER_STANDING_PROCESS_ANIMATION, ageInTicks, 1f);
 
         // Walking animation
         if (limbSwingAmount > 0.01F) {
@@ -108,12 +112,19 @@ public class NorthrunnerModel<T extends Entity> extends HierarchicalModel<T> {
             this.animateWalk(ModAnimationDefinitions.NORTHRUNNER_WALK,
                     limbSwing, limbSwingAmount, 4f, 2f);
         }
-//        if (!((NorthrunnerEntity) entity).isInSittingPose()
-//                && ((NorthrunnerEntity) entity).standingUpProcessAnimationState.getAccumulatedTime() > 1000L
-//                && limbSwingAmount > 0.01F) {
-//            this.animateWalk(ModAnimationDefinitions.NORTHRUNNER_WALK,
-//                    limbSwing, limbSwingAmount, 4f, 2f);
-//        }
+        // lowering root of model for sitting
+        // the amount that it is lowered (the 6.545) needs to be the same distance that the entire model is lowered
+        // in the NORTHRUNNER_SITTING_PROCESS_ANIMATION
+        // and the 20f is the total tick duration of the sitting animation (20 ticks = 1 second)
+        if (((NorthrunnerEntity) entity).isCavallCreatureSitting()) {
+            long poseTime = ((NorthrunnerEntity) entity).getPoseTime();
+            float progress = Math.min(poseTime / 20f, 1.0f);
+            this.root.y += 6.545f * progress;
+        } else if (((NorthrunnerEntity) entity).isInPoseTransition()) {
+            long poseTime = ((NorthrunnerEntity) entity).getPoseTime();
+            float progress = Math.min(poseTime / 20f, 1.0f);
+            this.root.y += 6.545f * (1.0f - progress);
+        }
     }
 
     private void applyHeadRotation(float HeadYaw, float HeadPitch, float pAgeInTicks){
@@ -135,9 +146,14 @@ public class NorthrunnerModel<T extends Entity> extends HierarchicalModel<T> {
         northrunner.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 
+//    @Override
+//    public ModelPart root() {
+//        return northrunner;
+//    }
+
     @Override
     public ModelPart root() {
-        return northrunner;
+        return this.root;
     }
 
 }

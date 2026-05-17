@@ -49,10 +49,10 @@ public class FlockingOnTheMoveGoal extends Goal {
     @Override
     public boolean canUse() {
         if (mob.isBaby()) return false;
-        System.out.println(mob.getUUID() + " | CanUse: Am I OTM? " + mob.isOnTheMove());
+        //System.out.println(mob.getUUID() + " | CanUse: Am I OTM? " + mob.isOnTheMove());
         if (!mob.isOnTheMove()) return false;
         List<? extends CavallCreature> members = mob.getNeighbors(mob, rejoinFlockRadius, mob.getClass());
-        System.out.println(mob.getUUID() + " | FlockingOnTheMoveGoal canUse: members=" + members.size());
+        //System.out.println(mob.getUUID() + " | FlockingOnTheMoveGoal canUse: members=" + members.size());
         return !members.isEmpty();
     }
 

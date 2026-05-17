@@ -1,9 +1,11 @@
 package net.mousetrap.cavallmod.entity;
 
+import com.google.common.annotations.VisibleForTesting;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.Animal;
@@ -19,6 +21,8 @@ public class CavallCreature extends TamableAnimal {
     protected CavallCreature(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
     }
+
+    public int sittingAnimationDuration = 1; // to be overridden in all animations
 
     public int onTheMoveTimeout = 1; // to be overridden in all animals
     public int howLongOnTheMove = 1; // to be overridden in all animals
@@ -37,13 +41,13 @@ public class CavallCreature extends TamableAnimal {
     public static final EntityDataAccessor<Boolean> SPRINT_JUMPING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> FLYING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
 
-    //private static final EntityDataAccessor<Long> LAST_POSE_CHANGE_TICK = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.LONG);
+    private static final EntityDataAccessor<Long> LAST_POSE_CHANGE_TICK = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.LONG);
 
 
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        //this.entityData.define(LAST_POSE_CHANGE_TICK, 0L);
+        this.entityData.define(LAST_POSE_CHANGE_TICK, 0L);
 
         this.entityData.define(IDLING, true); // the animal is automatically idling
 
@@ -182,7 +186,7 @@ public class CavallCreature extends TamableAnimal {
         return this.entityData.get(ON_THE_MOVE);
     }
     public void setOnTheMoveTo(boolean moving) {
-        System.out.println(this.getUUID() + " | setOnTheMoveTo=" + moving);
+        //System.out.println(this.getUUID() + " | setOnTheMoveTo=" + moving);
         this.entityData.set(ON_THE_MOVE, moving);
         if (moving) {
             this.entityData.set(IDLING, false);
@@ -210,8 +214,64 @@ public class CavallCreature extends TamableAnimal {
         AABB box = new AABB(mob.getX() - radius, mob.getY() - 4, mob.getZ() - radius,
                 mob.getX() + radius, mob.getY() + 4, mob.getZ() + radius);
         List<? extends CavallCreature> result = mob.level().getEntitiesOfClass(type, box, a -> a != mob && !a.isBaby());
-        System.out.println(mob.getUUID() + " | Using getNeighbors! I see " + result.size() + " neighbors");
+        //System.out.println(mob.getUUID() + " | Using getNeighbors! I see " + result.size() + " neighbors");
         return result;
+    }
+
+    // directly from camel, just renamed
+    public long getPoseTime() {
+        return this.level().getGameTime() - Math.abs(this.entityData.get(LAST_POSE_CHANGE_TICK));
+    }
+    @Override
+    public void setPose(Pose pose) {
+        if (pose != this.getPose()) {
+            // positive tick = standing, negative tick = sitting
+            if (pose == Pose.SITTING) {
+                this.entityData.set(LAST_POSE_CHANGE_TICK, -this.level().getGameTime());
+            } else {
+                this.entityData.set(LAST_POSE_CHANGE_TICK, this.level().getGameTime());
+            }
+        }
+        super.setPose(pose);
+    }
+
+    public boolean isCavallCreatureSitting() {
+        return this.entityData.get(LAST_POSE_CHANGE_TICK) < 0L;
+    }
+    //
+    public boolean isCavallCreatureVisuallySitting() {
+        return this.getPoseTime() < 0L != this.isCavallCreatureSitting();
+    }
+
+    public boolean isInPoseTransition() {
+        long i = this.getPoseTime();
+        return i < (long)(this.isCavallCreatureSitting() ? 40 : 52);
+    }
+
+    public boolean isVisuallySittingDown() {
+        return this.isCavallCreatureSitting() && this.getPoseTime() < 40L && this.getPoseTime() >= 0L;
+    }
+    //
+    public void sitDown() {
+        if (!this.isCavallCreatureSitting()) {
+            this.playSound(SoundEvents.CAMEL_SIT, 1.0F, 1.0F);
+            this.setPose(Pose.SITTING);
+            this.resetLastPoseChangeTick(-this.level().getGameTime());
+            this.refreshDimensions();
+        }
+    }
+
+    public void standUp() {
+        if (this.isCavallCreatureSitting()) {
+            this.playSound(SoundEvents.CAMEL_STAND, 1.0F, 1.0F);
+            this.setPose(Pose.STANDING);
+            this.resetLastPoseChangeTick(this.level().getGameTime());
+            this.refreshDimensions();
+        }
+    }
+    @VisibleForTesting
+    public void resetLastPoseChangeTick(long pLastPoseChangeTick) {
+        this.entityData.set(LAST_POSE_CHANGE_TICK, pLastPoseChangeTick);
     }
 
 }

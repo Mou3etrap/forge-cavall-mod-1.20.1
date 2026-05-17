@@ -66,13 +66,13 @@ public class FlockingStrollGoal extends Goal {
 
         double distToNearest = mob.position().distanceTo(nearest.position());
 
-        if (distToNearest > rejoinFlockRadius * 0.75) {
+        if (distToNearest > rejoinFlockRadius * 0.5) {
             // getting too far from nearest neighbor — head straight to flock center
             mob.getNavigation().moveTo(
                     flockCenter.x,
                     mob.getY(),
                     flockCenter.z,
-                    speed * 1.5
+                    speed * 1.2
             );
         } //else {
             // similar to WaterAvoidingRandomStrollGoal

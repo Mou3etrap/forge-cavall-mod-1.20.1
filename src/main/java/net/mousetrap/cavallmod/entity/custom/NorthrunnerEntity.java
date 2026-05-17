@@ -1,8 +1,14 @@
 package net.mousetrap.cavallmod.entity.custom;
 
+import com.google.common.annotations.VisibleForTesting;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -10,10 +16,11 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 import net.mousetrap.cavallmod.entity.CavallCreature;
@@ -28,18 +35,21 @@ public class NorthrunnerEntity extends CavallCreature {
     public NorthrunnerEntity(EntityType<? extends TamableAnimal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
         this.setTame(false);
-        this.onTheMoveTimeout = 600; // override
-        this.howLongOnTheMove = 1200; // override
+        this.onTheMoveTimeout = 1200; // override
+        this.howLongOnTheMove = 600; // override
         this.timer1 = (int)(Math.random() * onTheMoveTimeout); // override
     }
 
     public final AnimationState idleAnimationState = new AnimationState();
-    public final AnimationState poseAnimationState = new AnimationState();
+    public final AnimationState sittingProcessAnimationState = new AnimationState();
+    public final AnimationState sittingAnimationState = new AnimationState();
+    public final AnimationState standingUpProcessAnimationState = new AnimationState();
+    // public final AnimationState poseAnimationState = new AnimationState();
     //public final AnimationState sittingAnimationState = new AnimationState();
     //public final AnimationState sittingProcessAnimationState = new AnimationState();
     //public final AnimationState standingUpProcessAnimationState = new AnimationState();
 
-    //private static final EntityDimensions SITTING_DIMENSIONS = EntityDimensions.fixed(1.2f, 0.7f);
+    private static final EntityDimensions SITTING_DIMENSIONS = EntityDimensions.scalable(1.2f, 0.7f);
 
     private int idleAnimationTimeout = 0;
 
@@ -50,20 +60,22 @@ public class NorthrunnerEntity extends CavallCreature {
     protected void registerGoals() {
         this.setPathfindingMalus(BlockPathTypes.WATER, -1.0f);
         this.setPathfindingMalus(BlockPathTypes.WATER_BORDER, -1.0f);
+        this.setPathfindingMalus(BlockPathTypes.FENCE, -1.0f);
         // tameable mob goals
-        this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
+        //this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
 
         // goals universal to all animals
         this.goalSelector.addGoal(2, new FollowParentGoal(this, 1.25));
-        this.goalSelector.addGoal(3, new BreedGoal(this, 1.25));
+        this.goalSelector.addGoal(5, new BreedGoal(this, 1.25));
         this.goalSelector.addGoal(3, new TemptGoal(this, 1.25, Ingredient.of(Items.CARROT), false));
-        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
 
         // goals for terrestrial animals
         this.goalSelector.addGoal(1, new FloatGoal(this));
-        //this.goalSelector.addGoal(6, new SittingGoal(this, 200, 600));
-        this.goalSelector.addGoal(5, new RandomFlockingStrollGoal(this, 1.0, flockRadius, 40, 100));
-        this.goalSelector.addGoal(4, new FlockingOnTheMoveGoal(this, 0.7, flockRadius, 0.8, 0.3, 100));
+        this.goalSelector.addGoal(4, new SittingGoal(this, 200, 600));
+        this.goalSelector.addGoal(6, new RandomFlockingStrollGoal(this, 1.0, flockRadius, 40, 100));
+        this.goalSelector.addGoal(5, new FlockingOnTheMoveGoal(this, 0.7, flockRadius, 0.6, 0.3, 60));
+        this.goalSelector.addGoal(8, new RandomLookAroundWhileSittingGoal(this));
         //this.goalSelector.addGoal(3, new FlockingStrollGoal(this, 1.0, 16.0));
         //this.goalSelector.addGoal(2, new FlockingGoal(this, 1.0, flockRadius, 1.2, 0.8, 0.3, 0.5, 4, 2, 2));
         //this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1));
@@ -74,29 +86,27 @@ public class NorthrunnerEntity extends CavallCreature {
         //this.targetSelector.addGoal(5, new HurtByTargetGoal(this));
     }
 
-    public boolean canFly = false;
-
     @Override
     public void tick() {
         super.tick();
         if (this.level().isClientSide()) {
-            this.poseAnimationState.startIfStopped(this.tickCount);
+            this.idleAnimationState.startIfStopped(this.tickCount);
             setupAnimationStates();
         }
 
         // Setting the On The Move flag at random if the flock is idling
         if (this.isIdling()) { // if animal is idling
             timer1++;
-            System.out.println(this.getUUID() + " | my timer1 is " + this.timer1);
+            //System.out.println(this.getUUID() + " | my timer1 is " + this.timer1);
             List<? extends CavallCreature> neighbors = getNeighbors(this, flockRadius, NorthrunnerEntity.class);
             if (timer1 >= onTheMoveTimeout) {
                 this.setOnTheMoveTo(true);
                 this.setIdlingTo(false);
-                System.out.println(this.getUUID() + " | I'm OTM! =" + this.isOnTheMove());
+                //System.out.println(this.getUUID() + " | I'm OTM! =" + this.isOnTheMove());
                 for (CavallCreature member : neighbors) {
                     member.setOnTheMoveTo(true);
                     member.setIdlingTo(false);
-                    System.out.println(this.getUUID() + " | My friend is OTM! =" + member.isOnTheMove());
+                    //System.out.println(this.getUUID() + " | My friend is OTM! =" + member.isOnTheMove());
                     member.timer1 = 0; // prevent neighbors from immediately re-triggering
                 }
                 timer1 = 0;
@@ -104,7 +114,7 @@ public class NorthrunnerEntity extends CavallCreature {
         }
         if (this.isOnTheMove()){ // if we've been on the move
             timer2++;
-            System.out.println(this.getUUID() + " | my timer2 is " + this.timer2);
+            //System.out.println(this.getUUID() + " | my timer2 is " + this.timer2);
             if (timer2 == howLongOnTheMove){ // if it's time to stop being on the move
                 this.resetFlagsToIdle(); // resets to idle
                 // set their allies to idle as well
@@ -120,19 +130,38 @@ public class NorthrunnerEntity extends CavallCreature {
     // this method is really just a coutdown sort of method which counts down the timeout variable each tick
     // and if the timeout gets to zero, it resets it
     private void setupAnimationStates(){
+        // this section stops the standing animation from firing when killed
+        if (this.isDeadOrDying()) {
+            this.sittingAnimationState.stop();
+            this.sittingProcessAnimationState.stop();
+            this.standingUpProcessAnimationState.stop();
+            return;
+        }
+
         if(this.idleAnimationTimeout <= 0){
             this.idleAnimationTimeout = this.random.nextInt(40)+80;
             this.idleAnimationState.start(this.tickCount);
         } else {
             --this.idleAnimationTimeout;
         }
-//        if (this.isSitting()) {
-//            this.sittingAnimationState.startIfStopped(this.tickCount);
-//            this.idleAnimationState.stop(); // stop walk/idle animation while sitting
-//        } else {
-//            this.sittingAnimationState.stop();
-//            this.idleAnimationState.startIfStopped(this.tickCount);
-//        }
+
+        // this section is responsible for triggering sitting & standing animations and poses at the right times
+        if (this.isCavallCreatureVisuallySitting()) {
+            this.standingUpProcessAnimationState.stop();
+            this.idleAnimationState.stop();
+            if (this.isVisuallySittingDown()) {
+                this.sittingProcessAnimationState.startIfStopped(this.tickCount);
+                this.sittingAnimationState.stop();
+            } else {
+                this.sittingProcessAnimationState.stop();
+                this.sittingAnimationState.startIfStopped(this.tickCount);
+            }
+        } else {
+            this.sittingProcessAnimationState.stop();
+            this.sittingAnimationState.stop();
+            this.idleAnimationState.stop();
+            this.standingUpProcessAnimationState.animateWhen(this.isInPoseTransition() && this.getPoseTime() >= 0L, this.tickCount);
+        }
     }
 
     @Override
@@ -185,7 +214,7 @@ public class NorthrunnerEntity extends CavallCreature {
     }
     @Override
     protected @Nullable SoundEvent getAmbientSound() {
-        return SoundEvents.ALLAY_AMBIENT_WITHOUT_ITEM;
+        return SoundEvents.SILVERFISH_AMBIENT;
     }
     @Override
     protected @Nullable SoundEvent getHurtSound(DamageSource pDamageSource) {
@@ -194,5 +223,70 @@ public class NorthrunnerEntity extends CavallCreature {
     @Override
     protected @Nullable SoundEvent getDeathSound() {
         return SoundEvents.BAT_DEATH;
+    }
+
+
+    public InteractionResult mobInteract(Player pPlayer, InteractionHand pHand) {
+        ItemStack itemstack = pPlayer.getItemInHand(pHand);
+        Item item = itemstack.getItem();
+        if (this.level().isClientSide) {
+            boolean flag = this.isOwnedBy(pPlayer) || this.isTame() || itemstack.is(Items.BONE) && !this.isTame();
+            return flag ? InteractionResult.CONSUME : InteractionResult.PASS;
+        } else if (this.isTame()) {
+            if (this.isFood(itemstack) && this.getHealth() < this.getMaxHealth()) {
+                this.heal((float)itemstack.getFoodProperties(this).getNutrition());
+                if (!pPlayer.getAbilities().instabuild) {
+                    itemstack.shrink(1);
+                }
+
+                this.gameEvent(GameEvent.EAT, this);
+                return InteractionResult.SUCCESS;
+            }
+            InteractionResult interactionresult = super.mobInteract(pPlayer, pHand);
+            if ((!interactionresult.consumesAction() || this.isBaby()) && this.isOwnedBy(pPlayer)) {
+                this.setOrderedToSit(!this.isOrderedToSit());
+                if (this.isOrderedToSit()) {
+                    this.sitDown(); // trigger pose transition
+                } else {
+                    this.standUp(); // trigger pose transition
+                }
+                this.jumping = false;
+                this.navigation.stop();
+                this.setTarget((LivingEntity)null);
+                return InteractionResult.SUCCESS;
+            } else {
+                return interactionresult;
+            }
+
+        } else if (itemstack.is(Items.BONE)) {
+            if (!pPlayer.getAbilities().instabuild) {
+                itemstack.shrink(1);
+            }
+
+            if (this.random.nextInt(3) == 0 && !net.minecraftforge.event.ForgeEventFactory.onAnimalTame(this, pPlayer)) {
+                this.tame(pPlayer);
+                this.navigation.stop();
+                this.setTarget((LivingEntity)null);
+                this.setOrderedToSit(true);
+                this.sitDown(); // trigger pose transition on tame
+                this.level().broadcastEntityEvent(this, (byte)7);
+            } else {
+                this.level().broadcastEntityEvent(this, (byte)6);
+            }
+
+            return InteractionResult.SUCCESS;
+        } else {
+            return super.mobInteract(pPlayer, pHand);
+        }
+    }
+//    @Override
+//    public EntityDimensions getDimensions(Pose pose) {
+//        if (pose == Pose.SITTING) {
+//            return SITTING_DIMENSIONS;
+//        }
+//        return super.getDimensions(pose);
+//    }
+    public EntityDimensions getDimensions(Pose pPose) {
+        return pPose == Pose.SITTING ? SITTING_DIMENSIONS.scale(this.getScale()) : super.getDimensions(pPose);
     }
 }
