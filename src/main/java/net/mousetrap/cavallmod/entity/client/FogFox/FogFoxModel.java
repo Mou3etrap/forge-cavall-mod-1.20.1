@@ -9,6 +9,7 @@ import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.mousetrap.cavallmod.entity.animations.ModAnimationDefinitions;
 import net.mousetrap.cavallmod.entity.custom.FogFoxEntity;
@@ -335,6 +336,7 @@ public class FogFoxModel<T extends Entity> extends HierarchicalModel<T> {
 		}
 	}
 	// look back into kaupens' code about an Apply Head Rotation method
+
 
 	@Override
 	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {

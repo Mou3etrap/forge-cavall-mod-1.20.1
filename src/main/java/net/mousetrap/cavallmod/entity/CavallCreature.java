@@ -5,26 +5,29 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.AgeableMob;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class CavallCreature extends Animal {
-    protected CavallCreature(EntityType<? extends Animal> type, Level level) {
+public class CavallCreature extends TamableAnimal {
+    protected CavallCreature(EntityType<? extends TamableAnimal> type, Level level) {
         super(type, level);
     }
+
+    public int onTheMoveTimeout = 1; // to be overridden in all animals
+    public int howLongOnTheMove = 1; // to be overridden in all animals
+    public int timer1 = (int)(Math.random() * onTheMoveTimeout);
+    public int timer2 = 0;
 
     public static final EntityDataAccessor<Boolean> IDLING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
 
     public static final EntityDataAccessor<Boolean> SLEEPING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
-    public static final EntityDataAccessor<Boolean> SITTING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> HIDDEN_AMBUSHING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> PURSUING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> FLEEING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
@@ -34,14 +37,17 @@ public class CavallCreature extends Animal {
     public static final EntityDataAccessor<Boolean> SPRINT_JUMPING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Boolean> FLYING = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.BOOLEAN);
 
+    //private static final EntityDataAccessor<Long> LAST_POSE_CHANGE_TICK = SynchedEntityData.defineId(CavallCreature.class, EntityDataSerializers.LONG);
+
 
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
+        //this.entityData.define(LAST_POSE_CHANGE_TICK, 0L);
+
         this.entityData.define(IDLING, true); // the animal is automatically idling
 
         this.entityData.define(SLEEPING, false);
-        this.entityData.define(SITTING, false);
         this.entityData.define(HIDDEN_AMBUSHING, false);
         this.entityData.define(PURSUING, false);
         this.entityData.define(FLEEING, false);
@@ -113,7 +119,6 @@ public class CavallCreature extends Animal {
         this.entityData.set(HIDDEN_AMBUSHING, false);
         this.entityData.set(FLEEING, false);
         this.entityData.set(SLEEPING, false);
-        this.entityData.set(SITTING, false);
         this.entityData.set(PURSUING, false);
         this.entityData.set(ON_THE_MOVE, false);
         this.entityData.set(ATTACKING, false);
@@ -124,7 +129,6 @@ public class CavallCreature extends Animal {
         this.entityData.set(HIDDEN_AMBUSHING, false);
         this.entityData.set(FLEEING, false);
         this.entityData.set(SLEEPING, false);
-        this.entityData.set(SITTING, false);
         this.entityData.set(PURSUING, false);
         this.entityData.set(ON_THE_MOVE, false);
         this.entityData.set(ATTACKING, false);
@@ -174,16 +178,16 @@ public class CavallCreature extends Animal {
     public void setSleepingTo(boolean sleeping) {
         this.entityData.set(SLEEPING, sleeping);
     }
-    public boolean isSitting() {
-        return this.entityData.get(SITTING);
-    }
-    public void setSittingTo(boolean sitting) {
-        this.entityData.set(SITTING, sitting);
-    }
     public boolean isOnTheMove() {
         return this.entityData.get(ON_THE_MOVE);
     }
-    public void setOnTheMoveTo(boolean moving) { this.entityData.set(ON_THE_MOVE, moving); }
+    public void setOnTheMoveTo(boolean moving) {
+        System.out.println(this.getUUID() + " | setOnTheMoveTo=" + moving);
+        this.entityData.set(ON_THE_MOVE, moving);
+        if (moving) {
+            this.entityData.set(IDLING, false);
+        }
+    }
     public boolean isFlying() {
         return this.entityData.get(FLYING);
     }
@@ -199,15 +203,15 @@ public class CavallCreature extends Animal {
     }
 
     // generic get neighbors method
-    // includes babies
     // is called like
     // List<FogFoxEntity> neighbors = getNeighbors(this, flockRadius, FogFoxEntity.class);
+    // this method will ignore baby animals so that flock members with a baby following them around won't think the baby is part of the flock
     public List<? extends CavallCreature> getNeighbors(CavallCreature mob, double radius, Class<? extends CavallCreature> type) {
-        return mob.level().getEntitiesOfClass(
-                type,
-                mob.getBoundingBox().inflate(radius),
-                a -> a != mob
-        );
+        AABB box = new AABB(mob.getX() - radius, mob.getY() - 4, mob.getZ() - radius,
+                mob.getX() + radius, mob.getY() + 4, mob.getZ() + radius);
+        List<? extends CavallCreature> result = mob.level().getEntitiesOfClass(type, box, a -> a != mob && !a.isBaby());
+        System.out.println(mob.getUUID() + " | Using getNeighbors! I see " + result.size() + " neighbors");
+        return result;
     }
 
 }

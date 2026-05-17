@@ -1,5 +1,6 @@
 package net.mousetrap.cavallmod.entity.custom;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -10,6 +11,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Bucketable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -24,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class FogFoxEntity extends CavallCreature {
-    public FogFoxEntity(EntityType<? extends Animal> pEntityType, Level pLevel) {
+    public FogFoxEntity(EntityType<? extends TamableAnimal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
@@ -211,4 +213,6 @@ public class FogFoxEntity extends CavallCreature {
     protected @Nullable SoundEvent getDeathSound() {
         return SoundEvents.BAT_DEATH;
     }
+
+
 }

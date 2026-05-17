@@ -5,8 +5,9 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+
 public class FlockingGoal extends Goal {
 
     private final Animal mob;
@@ -49,7 +50,9 @@ public class FlockingGoal extends Goal {
     private final int updateInterval; // ticks between updates
 
     private Vec3 lastMoveVec = Vec3.ZERO;
-    private Vec3 cachedRandomVec = Vec3.ZERO;
+    private Vec3 wanderDirection = Vec3.ZERO;
+    private int wanderChangeTick = 0;
+    private final Map<UUID, Vec3> lastNeighborPositions = new HashMap<>();
 
     public FlockingGoal(
             Animal mob,
@@ -73,12 +76,12 @@ public class FlockingGoal extends Goal {
         this.maxFlockDistance = maxFlockDistance;
         this.returnForceMultiplier = returnForceMultiplier;
         this.updateInterval = updateInterval;
+        this.setFlags(EnumSet.of(Flag.MOVE));
     }
 
     @Override
     public boolean canUse() {
         if (mob.isBaby()) return false;
-        if (mob.tickCount % updateInterval != 0) return false;
 
         List<Animal> neighbors = mob.level().getEntitiesOfClass(
                 Animal.class,
@@ -87,106 +90,118 @@ public class FlockingGoal extends Goal {
         );
         return !neighbors.isEmpty(); // returns false if there are no neighbors nearby
     }
+    @Override
+    public boolean canContinueToUse() {
+        return !mob.level().getEntitiesOfClass(
+                Animal.class,
+                mob.getBoundingBox().inflate(flockRadius * 2), // match the escape hatch radius
+                a -> a != mob && a.getClass() == mob.getClass()
+        ).isEmpty();
+    }
 
     @Override
     public void tick() {
         Level level = mob.level();
+        if (mob.tickCount % updateInterval != 0) return;
 
         List<Animal> neighbors = level.getEntitiesOfClass(
                 Animal.class,
-                mob.getBoundingBox().inflate(flockRadius),
+                mob.getBoundingBox().inflate(flockRadius * 2),
                 a -> a != mob && a.getClass() == mob.getClass()
         );
-        if (neighbors.isEmpty()) return; // if there's no flock, nothing can be done
-        // technically this should never return because the canUse covers for this
 
+        if (neighbors.isEmpty()) return;
+
+        // --- compute flock center ---
+        Vec3 flockCenter = Vec3.ZERO;
+        for (Animal member : neighbors) {
+            flockCenter = flockCenter.add(member.position());
+        }
+        flockCenter = flockCenter.scale(1.0 / neighbors.size());
+        double distToCenter = mob.position().distanceTo(flockCenter);
+
+        // --- CASE 1: fully separated, hard return ---
+        if (distToCenter > flockRadius) {
+            mob.getNavigation().moveTo(flockCenter.x, mob.getY(), flockCenter.z, speed * 1.5);
+            lastMoveVec = flockCenter.subtract(mob.position()).normalize().scale(speed);
+            return;
+        }
+
+        // --- refresh wander direction periodically ---
+        if (mob.tickCount >= wanderChangeTick || wanderDirection.equals(Vec3.ZERO)) {
+            wanderDirection = new Vec3(
+                    mob.getRandom().nextDouble() - 0.5,
+                    0,
+                    mob.getRandom().nextDouble() - 0.5
+            ).normalize();
+            // pick a new wander direction every 3-5 seconds
+            wanderChangeTick = mob.tickCount + 60 + mob.getRandom().nextInt(40);
+        }
+
+// --- CASE 2: no close neighbors, just wander ---
+        List<Animal> closeNeighbors = neighbors.stream()
+                .filter(a -> a.distanceToSqr(mob) < flockRadius * flockRadius)
+                .toList();
+
+        if (closeNeighbors.isEmpty()) {
+            mob.getNavigation().moveTo(
+                    mob.getX() + wanderDirection.x * 8,
+                    mob.getY(),
+                    mob.getZ() + wanderDirection.z * 8,
+                    speed
+            );
+            return;
+        }
+
+// --- CASE 3: normal boids ---
         Vec3 separation = Vec3.ZERO;
         Vec3 alignment = Vec3.ZERO;
         Vec3 cohesion = Vec3.ZERO;
 
-        for (Animal neighbor : neighbors) {
+        for (Animal neighbor : closeNeighbors) {
             Vec3 toNeighbor = neighbor.position().subtract(mob.position());
             double distance = toNeighbor.length();
 
-            if (distance < 2.0 && distance > 0.001) {
-                separation = separation.subtract(
-                        toNeighbor.normalize().scale(1.0 / distance)
-                );
+            if (distance < 4.0 && distance > 0.001) {
+                separation = separation.subtract(toNeighbor.normalize().scale(1.0 / distance));
             }
-            alignment = alignment.add(neighbor.getDeltaMovement());
-            cohesion = cohesion.add(toNeighbor);
 
+            Vec3 lastPos = lastNeighborPositions.getOrDefault(neighbor.getUUID(), neighbor.position());
+            Vec3 estimatedVelocity = neighbor.position().subtract(lastPos);
+            alignment = alignment.add(estimatedVelocity);
+
+            cohesion = cohesion.add(toNeighbor);
+            lastNeighborPositions.put(neighbor.getUUID(), neighbor.position());
         }
 
-        int count = neighbors.size();
+        lastNeighborPositions.keySet().retainAll(
+                closeNeighbors.stream().map(Animal::getUUID).collect(Collectors.toSet())
+        );
+
+        int count = closeNeighbors.size();
         alignment = alignment.scale(1.0 / count);
         cohesion = cohesion.scale(1.0 / count);
-
-
-        int k = 6; // using (up to) k nearest neighbors to return to
-        // sorting the already-established neighbors by distance
-        neighbors.sort(Comparator.comparingDouble(a -> a.distanceToSqr(mob)));
-        // Take up to k nearest --> save as j
-        // required for flocks of less than k to be functional
-        int j = Math.min(neighbors.size(), k);
-        // compute local center of nearest j neighbors
-        Vec3 localCenter = Vec3.ZERO;
-        for (int i = 0; i < j; i++) {
-            localCenter = localCenter.add(neighbors.get(i).position());
-        }
-        localCenter = localCenter.scale(1.0 / j);
-        // measure distance to local center
-        Vec3 toLocalCenter = localCenter.subtract(mob.position());
-        double distanceFromLocal = toLocalCenter.length();
-        // return to flock
-        Vec3 returnForce = Vec3.ZERO;
-        boolean returningToFlock = distanceFromLocal > maxFlockDistance;
-        if (returningToFlock) {
-            returnForce = toLocalCenter.normalize().scale(
-                    (distanceFromLocal - maxFlockDistance) * returnForceMultiplier
-            );
-        }
-//        Vec3 toCenter = flockCenter.subtract(mob.position());
-//        double distanceFromCenter = toCenter.length();
-//
-//        Vec3 returnForce = Vec3.ZERO;
-//        boolean returningToFlock = distanceFromCenter > maxFlockDistance;
-//
-//        if (returningToFlock) {
-//            returnForce = toCenter.normalize().scale(
-//                    (distanceFromCenter - maxFlockDistance) * returnForceMultiplier);
-//            //System.out.println("Returning!");
-//        }
-
-        if (mob.tickCount % updateInterval == 0 && !returningToFlock) {
-            cachedRandomVec = new Vec3(
-                    mob.getRandom().nextDouble() - 0.5,
-                    0,
-                    mob.getRandom().nextDouble() - 0.5
-            ).scale(randomnessWeight);
-        }
-
-        Vec3 randomVec = returningToFlock ? Vec3.ZERO : cachedRandomVec;
 
         Vec3 moveVec = separation.scale(separationWeight)
                 .add(alignment.scale(alignmentWeight))
                 .add(cohesion.scale(cohesionWeight))
-                .add(returnForce)
-                .add(randomVec);
+                .add(wanderDirection.scale(randomnessWeight)); // wander always contributes
 
         double smoothing = 0.2;
         moveVec = lastMoveVec.scale(1 - smoothing).add(moveVec.scale(smoothing));
         lastMoveVec = moveVec;
 
-        if (moveVec.lengthSqr() > 0.0001) {
-            moveVec = moveVec.normalize().scale(speed);
-
-            mob.getNavigation().moveTo(
-                    mob.getX() + moveVec.x,
-                    mob.getY(),
-                    mob.getZ() + moveVec.z,
-                    speed
-            );
+// floor: if boids vector is too weak, just use wander direction
+        if (moveVec.lengthSqr() < 0.0001) {
+            moveVec = wanderDirection.scale(speed);
         }
+
+        moveVec = moveVec.normalize().scale(speed);
+        mob.getNavigation().moveTo(
+                mob.getX() + moveVec.x * 6,
+                mob.getY(),
+                mob.getZ() + moveVec.z * 6,
+                speed
+        );
     }
 }

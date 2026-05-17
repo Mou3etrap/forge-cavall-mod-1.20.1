@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class FlayFolkEntity extends CavallCreature {
-    public FlayFolkEntity(EntityType<? extends Animal> pEntityType, Level pLevel) {
+    public FlayFolkEntity(EntityType<? extends TamableAnimal> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
@@ -101,7 +101,7 @@ public class FlayFolkEntity extends CavallCreature {
         }
     }
 
-    // this method is really just a coutdown sort of method which counts down the timeout variable each tick
+    // this method is really just a countdown sort of method which counts down the timeout variable each tick
     // and if the timeout gets to zero, it resets it
     private void setupAnimationStates(){
         if(this.idleAnimationTimeout <= 0){
