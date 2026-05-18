@@ -17,6 +17,7 @@ import net.mousetrap.cavallmod.entity.ModEntities;
 import net.mousetrap.cavallmod.entity.client.FlayFolk.FlayFolkRenderer;
 import net.mousetrap.cavallmod.entity.client.FogFox.FogFoxRenderer;
 import net.mousetrap.cavallmod.entity.client.Northrunner.NorthrunnerRenderer;
+import net.mousetrap.cavallmod.entity.client.YakDog.YakDogRenderer;
 import net.mousetrap.cavallmod.item.ModCreativeModeTabs;
 import net.mousetrap.cavallmod.item.ModItems;
 import org.slf4j.Logger;
@@ -79,6 +80,7 @@ public class CavallMod
             EntityRenderers.register(ModEntities.FOGFOX.get(), FogFoxRenderer::new);
             EntityRenderers.register(ModEntities.FLAYFOLK.get(), FlayFolkRenderer::new);
             EntityRenderers.register(ModEntities.NORTHRUNNER.get(), NorthrunnerRenderer::new);
+            EntityRenderers.register(ModEntities.YAKDOG.get(), YakDogRenderer::new);
 
         }
     }

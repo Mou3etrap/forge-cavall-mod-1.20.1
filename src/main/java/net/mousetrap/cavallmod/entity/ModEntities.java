@@ -13,6 +13,7 @@ import net.mousetrap.cavallmod.CavallMod;
 import net.mousetrap.cavallmod.entity.custom.FlayFolkEntity;
 import net.mousetrap.cavallmod.entity.custom.FogFoxEntity;
 import net.mousetrap.cavallmod.entity.custom.NorthrunnerEntity;
+import net.mousetrap.cavallmod.entity.custom.YakDogEntity;
 
 import java.util.function.Predicate;
 
@@ -33,6 +34,10 @@ public class ModEntities {
     public static final RegistryObject<EntityType<NorthrunnerEntity>> NORTHRUNNER =
             ENTITY_TYPES.register("northrunner", () -> EntityType.Builder.of(NorthrunnerEntity::new,
                     MobCategory.CREATURE).sized(1.2F,1F).build("northrunner"));
+
+    public static final RegistryObject<EntityType<YakDogEntity>> YAKDOG =
+            ENTITY_TYPES.register("yakdog", () -> EntityType.Builder.of(YakDogEntity::new,
+                    MobCategory.CREATURE).sized(1.5F,2F).build("yakdog"));
 
 
 

@@ -2,9 +2,7 @@ package net.mousetrap.cavallmod.block.entity;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -25,7 +23,15 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> CAVALL_DIRT = registerBlock("cavall_dirt",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.DIRT)));
+    public static final RegistryObject<Block> CAVALL_SAND = registerBlock("cavall_sand",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.SAND)));
+    public static final RegistryObject<Block> CAVALL_GRAVEL = registerBlock("cavall_gravel",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.GRAVEL)));
 
+    public static final RegistryObject<Block> CAVALL_SAND_SALT = registerBlock("cavall_sand_salt",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.SAND)));
+    public static final RegistryObject<Block> CAVALL_STONE_SALT = registerBlock("cavall_stone_salt",
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.STONE)));
 
     public static final RegistryObject<Block> XYLO_LOG = registerBlock("xylo_log",
             () -> new ModFlammableRotatedPillarBlock(BlockBehaviour.Properties.copy(Blocks.OAK_LOG).strength(3f)));
@@ -40,7 +46,6 @@ public class ModBlocks {
             () -> new ModPlanks(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS)));
     public static final RegistryObject<Block> XYLO_LEAVES = registerBlock("xylo_leaves",
             () -> new LeavesBlock(BlockBehaviour.Properties.copy(Blocks.OAK_LEAVES)));
-
 
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block){

@@ -12,5 +12,7 @@ public class ModModelLayers {
             new ResourceLocation(CavallMod.MOD_ID, "flayfolk_layer"), "main");
     public static final ModelLayerLocation NORTHRUNNER_LAYER = new ModelLayerLocation(
             new ResourceLocation(CavallMod.MOD_ID, "northrunner_layer"), "main");
+    public static final ModelLayerLocation YAKDOG_LAYER = new ModelLayerLocation(
+            new ResourceLocation(CavallMod.MOD_ID, "yakdog_layer"), "main");
 
 }

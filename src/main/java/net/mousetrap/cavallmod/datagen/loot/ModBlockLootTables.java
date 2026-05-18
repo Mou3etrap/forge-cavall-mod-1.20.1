@@ -14,6 +14,7 @@ import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import net.minecraftforge.registries.RegistryObject;
 import net.mousetrap.cavallmod.block.entity.ModBlocks;
+import net.mousetrap.cavallmod.item.ModItems;
 
 import java.util.Set;
 
@@ -25,6 +26,8 @@ public class ModBlockLootTables extends BlockLootSubProvider {
     @Override
     protected void generate() {
         this.dropSelf(ModBlocks.CAVALL_DIRT.get());
+        this.dropSelf(ModBlocks.CAVALL_SAND.get());
+        this.dropSelf(ModBlocks.CAVALL_GRAVEL.get());
         this.dropSelf(ModBlocks.XYLO_PLANKS.get());
         this.dropSelf(ModBlocks.XYLO_LOG.get());
         this.dropSelf(ModBlocks.XYLO_WOOD.get());
@@ -32,6 +35,11 @@ public class ModBlockLootTables extends BlockLootSubProvider {
         this.dropSelf(ModBlocks.STRIPPED_XYLO_WOOD.get());
 
         this.dropSelf(ModBlocks.XYLO_LEAVES.get());
+
+        this.add(ModBlocks.CAVALL_SAND_SALT.get(),
+                block -> createOreDrop(ModBlocks.CAVALL_SAND_SALT.get(), ModItems.SALT_ORE.get()));
+        this.add(ModBlocks.CAVALL_STONE_SALT.get(),
+                block -> createOreDrop(ModBlocks.CAVALL_STONE_SALT.get(), ModItems.SALT_ORE.get()));
 
         // example of dropsOneToFive method
         // this.add(ModBlocks.BLOCK_NAME.get()), block -> dropsOneToFive(ModBlocks.BLOCK_NAME.get(), ModItems.ITEM_NAME.get()));

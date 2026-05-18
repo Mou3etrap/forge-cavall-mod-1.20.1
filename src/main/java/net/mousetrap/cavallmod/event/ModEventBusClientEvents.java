@@ -9,6 +9,7 @@ import net.mousetrap.cavallmod.entity.client.FogFox.FogFoxModel;
 import net.mousetrap.cavallmod.entity.client.FlayFolk.FlayFolkModel;
 import net.mousetrap.cavallmod.entity.client.ModModelLayers;
 import net.mousetrap.cavallmod.entity.client.Northrunner.NorthrunnerModel;
+import net.mousetrap.cavallmod.entity.client.YakDog.YakDogModel;
 
 @Mod.EventBusSubscriber(modid = CavallMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ModEventBusClientEvents {
@@ -17,6 +18,7 @@ public class ModEventBusClientEvents {
         event.registerLayerDefinition(ModModelLayers.FOGFOX_LAYER, FogFoxModel::createBodyLayer);
         event.registerLayerDefinition(ModModelLayers.FLAYFOLK_LAYER, FlayFolkModel::createBodyLayer);
         event.registerLayerDefinition(ModModelLayers.NORTHRUNNER_LAYER, NorthrunnerModel::createBodyLayer);
+        event.registerLayerDefinition(ModModelLayers.YAKDOG_LAYER, YakDogModel::createBodyLayer);
 
     }
 }

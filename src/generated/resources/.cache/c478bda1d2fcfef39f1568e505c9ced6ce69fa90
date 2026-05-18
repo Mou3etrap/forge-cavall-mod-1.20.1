@@ -1,5 +1,9 @@
-// 1.20.1	2025-12-28T00:08:17.7820154	Block States: cavallmod
+// 1.20.1	2026-05-18T17:50:22.6249465	Block States: cavallmod
 a532ec0a35c031a65b097578cb48acd2eb8dcc68 assets/cavallmod/blockstates/cavall_dirt.json
+0c597c5120ba3d85881ea10e94dc221bb02826dd assets/cavallmod/blockstates/cavall_gravel.json
+a599cae125eea2dcad38eaa2c238997394010ce8 assets/cavallmod/blockstates/cavall_sand.json
+142b5f96ebf6dead413af16cbc268e4dd6435779 assets/cavallmod/blockstates/cavall_sand_salt.json
+3adbb655bd99d1767cc0ca4b3a5b41b40c469f8d assets/cavallmod/blockstates/cavall_stone_salt.json
 8cd9d6562c6ce7f849b61b413ae63544d1c80fae assets/cavallmod/blockstates/stripped_xylo_log.json
 e7632854f6bc35a13f1763c854bbbe5d223804ab assets/cavallmod/blockstates/stripped_xylo_wood.json
 4ab03c4200283cf988494e8d64d670f5383d53e7 assets/cavallmod/blockstates/xylo_leaves.json
@@ -7,6 +11,10 @@ e7632854f6bc35a13f1763c854bbbe5d223804ab assets/cavallmod/blockstates/stripped_x
 72f2e06859efbaef4d9fbe4b22f3450f4092545e assets/cavallmod/blockstates/xylo_planks.json
 eaf9e2219f2f131f77f3db77ed3f821f16cbaf43 assets/cavallmod/blockstates/xylo_wood.json
 f81ca333431b94d1e76c835568643d1d8cbb4219 assets/cavallmod/models/block/cavall_dirt.json
+70fee6d1119d7963b5f4c1ad6812d5a8d423fac7 assets/cavallmod/models/block/cavall_gravel.json
+9f1ca386b56339b5e6a8826ff07a599e1a2d5b54 assets/cavallmod/models/block/cavall_sand.json
+225bbc53912f424404d0c065cf608f1b127be7f1 assets/cavallmod/models/block/cavall_sand_salt.json
+e638ac343c74cab9f0e378a2aab29db8d99134ce assets/cavallmod/models/block/cavall_stone_salt.json
 10296ceecd845e5d45364f101d713a10fe3ecd1a assets/cavallmod/models/block/stripped_xylo_log.json
 4045fbfe0827031e3731a2544c090cd395b80089 assets/cavallmod/models/block/stripped_xylo_log_horizontal.json
 e67e469b2210bda88bfb02f51092f68cde4af788 assets/cavallmod/models/block/stripped_xylo_wood.json
@@ -18,6 +26,10 @@ a14d5a9d011b32c37627f525e308ff48a985e438 assets/cavallmod/models/block/xylo_log.
 c3321a25f0d538e81318d78e426cff979dc755ba assets/cavallmod/models/block/xylo_wood.json
 252c57827b276c608cd758a7e1565affee926942 assets/cavallmod/models/block/xylo_wood_horizontal.json
 20adcd59530ab1a42bcb73dd703748eb23b5bef6 assets/cavallmod/models/item/cavall_dirt.json
+c9a8dca2029f2f2f72cb12aa26b2d143f62d6329 assets/cavallmod/models/item/cavall_gravel.json
+ce24bb89e378966d73bbb3dbb70df0806014ca6c assets/cavallmod/models/item/cavall_sand.json
+74ec4168ced8c3425800d370d20c4c995b8b424f assets/cavallmod/models/item/cavall_sand_salt.json
+b48a6abe2c8f6687025997fabf7b361ae6d7f3f7 assets/cavallmod/models/item/cavall_stone_salt.json
 c2ea0753024389698ab5ad9f7850ab09010f061d assets/cavallmod/models/item/stripped_xylo_log.json
 7815054065039078dd3aa6c22d2547b3bbcde0c4 assets/cavallmod/models/item/stripped_xylo_wood.json
 bd788eb2ffdff4da2d022f9ef9abb17e91795942 assets/cavallmod/models/item/xylo_leaves.json

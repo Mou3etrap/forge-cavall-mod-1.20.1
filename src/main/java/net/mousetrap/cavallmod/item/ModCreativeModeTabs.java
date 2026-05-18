@@ -23,11 +23,17 @@ public class ModCreativeModeTabs {
                         // items in the tab
                         pOutput.accept(ModItems.HAPLO_EYE.get());
                         pOutput.accept(ModItems.HAPLO_CLAW.get());
+                        pOutput.accept(ModItems.SALT_ORE.get());
                         pOutput.accept(ModItems.FOGFOX_SPAWN_EGG.get());
                         pOutput.accept(ModItems.FLAYFOLK_SPAWN_EGG.get());
                         pOutput.accept(ModItems.NORTHRUNNER_SPAWN_EGG.get());
+                        pOutput.accept(ModItems.YAKDOG_SPAWN_EGG.get());
 
                         pOutput.accept(ModBlocks.CAVALL_DIRT.get());
+                        pOutput.accept(ModBlocks.CAVALL_SAND.get());
+                        pOutput.accept(ModBlocks.CAVALL_GRAVEL.get());
+                        pOutput.accept(ModBlocks.CAVALL_SAND_SALT.get());
+                        pOutput.accept(ModBlocks.CAVALL_STONE_SALT.get());
 
                         pOutput.accept(ModBlocks.XYLO_LOG.get());
                         pOutput.accept(ModBlocks.XYLO_WOOD.get());

@@ -19,6 +19,9 @@ public class ModBlockTagGenerator extends BlockTagsProvider {
     @Override
     protected void addTags(HolderLookup.Provider pProvider) {
         // this.tag(ModTags.blocks.)
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .add(ModBlocks.CAVALL_STONE_SALT.get());
+
         this.tag(BlockTags.MINEABLE_WITH_AXE)
                 .add(ModBlocks.XYLO_PLANKS.get())
                 .add(ModBlocks.XYLO_LOG.get())

@@ -1,11 +1,18 @@
 {
   "item.cavallmod.haplo_eye": "Haplo Eye",
   "item.cavallmod.haplo_claw": "Haplo Claw",
+  "item.cavallmod.salt_ore": "Salt Ore",
   "item.cavallmod.fogfox_spawn_egg": "Fog Fox Spawn Egg",
   "item.cavallmod.flayfolk_spawn_egg": "Flay Folk Spawn Egg",
   "item.cavallmod.northrunner_spawn_egg": "Northrunner Spawn Egg",
+  "item.cavallmod.yakdog_spawn_egg": "Yak Dog Spawn Egg",
 
   "block.cavallmod.cavall_dirt": "Cavall Dirt",
+  "block.cavallmod.cavall_sand": "Cavall Sand",
+  "block.cavallmod.cavall_sand_salt": "Cavall Sand Salt",
+  "block.cavallmod.cavall_gravel": "Cavall Gravel",
+  "block.cavallmod.cavall_stone_salt": "Cavall Stone Salt",
+
   "block.cavallmod.xylo_log": "Xyloform Log",
   "block.cavallmod.xylo_wood": "Xyloform Wood",
   "block.cavallmod.stripped_xylo_log": "Stripped Xyloform Log",

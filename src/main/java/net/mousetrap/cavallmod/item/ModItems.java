@@ -19,6 +19,8 @@ public class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> HAPLO_CLAW = ITEMS.register("haplo_claw",
             () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> SALT_ORE = ITEMS.register("salt_ore",
+            () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> FOGFOX_SPAWN_EGG = ITEMS.register("fogfox_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.FOGFOX, 0x931932, 0x671728,
@@ -28,6 +30,9 @@ public class ModItems {
                     new Item.Properties()));
     public static final RegistryObject<Item> NORTHRUNNER_SPAWN_EGG = ITEMS.register("northrunner_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.NORTHRUNNER, 0xE0EDFE, 0xB8D4F7,
+                    new Item.Properties()));
+    public static final RegistryObject<Item> YAKDOG_SPAWN_EGG = ITEMS.register("yakdog_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.YAKDOG, 0x444464, 0x28223A,
                     new Item.Properties()));
 
 

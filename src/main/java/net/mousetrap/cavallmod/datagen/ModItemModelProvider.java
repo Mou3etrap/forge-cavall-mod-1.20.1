@@ -20,8 +20,13 @@ public class ModItemModelProvider extends ItemModelProvider {
     protected void registerModels() {
         simpleItem(ModItems.HAPLO_EYE);
         simpleItem(ModItems.HAPLO_CLAW);
+        simpleItem(ModItems.SALT_ORE);
+
         withExistingParent(ModItems.FOGFOX_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
         withExistingParent(ModItems.FLAYFOLK_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.NORTHRUNNER_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
+        withExistingParent(ModItems.YAKDOG_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
+
 
     }
 

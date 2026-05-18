@@ -1,5 +1,9 @@
-// 1.20.1	2025-12-28T00:08:17.7978483	Loot Tables
+// 1.20.1	2026-05-18T17:50:22.6304828	Loot Tables
 cffdf786f3233022813157590eacaa1cf1125757 data/cavallmod/loot_tables/blocks/cavall_dirt.json
+673956caf5d9fe96130532aa4e7337b7785df3d0 data/cavallmod/loot_tables/blocks/cavall_gravel.json
+b37f3020e66904ef2ebc0a5590c9b11fd0ff399a data/cavallmod/loot_tables/blocks/cavall_sand.json
+a8ba150053e5b38d0a98f74a0bb2dc1221a58420 data/cavallmod/loot_tables/blocks/cavall_sand_salt.json
+b2ca5fe635fd289d903974221847eda5dc1537c2 data/cavallmod/loot_tables/blocks/cavall_stone_salt.json
 37f00d4a3c02529093de511b4c955ce90dc54f39 data/cavallmod/loot_tables/blocks/stripped_xylo_log.json
 989eb4b953ce40d0c03225b236e8af044b2c7052 data/cavallmod/loot_tables/blocks/stripped_xylo_wood.json
 1c633bf26ba0087336274d369a476d04d19411e7 data/cavallmod/loot_tables/blocks/xylo_leaves.json

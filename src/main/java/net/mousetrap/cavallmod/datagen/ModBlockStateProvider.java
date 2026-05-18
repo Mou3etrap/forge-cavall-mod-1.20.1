@@ -19,7 +19,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
 
     @Override
     protected void registerStatesAndModels() {
-        blockWithItem(ModBlocks.CAVALL_DIRT);
+
         logBlock(((RotatedPillarBlock) ModBlocks.XYLO_LOG.get()));
         axisBlock(((RotatedPillarBlock) ModBlocks.XYLO_WOOD.get()), blockTexture(ModBlocks.XYLO_LOG.get()), blockTexture(ModBlocks.XYLO_LOG.get()));
 
@@ -33,6 +33,11 @@ public class ModBlockStateProvider extends BlockStateProvider {
         blockItem(ModBlocks.STRIPPED_XYLO_WOOD);
 
         blockWithItem(ModBlocks.XYLO_PLANKS);
+        blockWithItem(ModBlocks.CAVALL_DIRT);
+        blockWithItem(ModBlocks.CAVALL_SAND);
+        blockWithItem(ModBlocks.CAVALL_GRAVEL);
+        blockWithItem(ModBlocks.CAVALL_SAND_SALT);
+        blockWithItem(ModBlocks.CAVALL_STONE_SALT);
 
         leavesBlock(ModBlocks.XYLO_LEAVES);
     }

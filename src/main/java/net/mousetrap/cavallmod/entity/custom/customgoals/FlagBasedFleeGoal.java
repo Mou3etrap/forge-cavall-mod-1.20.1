@@ -96,7 +96,6 @@ public class FlagBasedFleeGoal extends PanicGoal {
 
         return flee.normalize();
     }
-
 }
 
 
